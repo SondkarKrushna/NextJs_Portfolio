@@ -35,7 +35,7 @@ export const experiences: ExperienceInterface[] = [
       "Built data transformation and anomaly detection pipelines on trading datasets, contributing to an award-winning solution in an internal innovation challenge.",
       "Led a 12-member team in a hackathon to develop an AI-powered tool that generates GitLab tickets, test cases, and requirement summaries, improving development workflow efficiency."
     ],
-    skills: ["Next.js", "React", "Node.js", "express.js", "MongoDB", "Tailwind CSS", "HTML", "CSS", "JavaScript"],
+    skills: ["Next.js", "React", "Node.js", "express.js", "MongoDB", "Tailwind CSS", "HTML 5", "CSS 3", "Javascript"],
     companyUrl: "https://techsuryaitsolution.com/",
     logo: "/experience/techsurya.png",
   },
@@ -57,7 +57,7 @@ export const experiences: ExperienceInterface[] = [
   "Optimized frontend performance and reduced page load times by improving component rendering and API response handling.",
   "Designed and built a responsive Next.js analytics dashboard with interactive charts, and created a demo walkthrough explaining the implementation."
 ],
-    skills: ["HTML5", "CSS3", "Javascript", "React", "API Integration", "JWT Auth"],
+    skills: ["HTML 5", "CSS 3", "Javascript", "React", "API Integration", "JWT Auth"],
     companyUrl: "https://cognifyz.com/",
     logo: "/experience/cognifyz.png",
   },
