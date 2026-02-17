@@ -35,7 +35,7 @@ export const experiences: ExperienceInterface[] = [
       "Built data transformation and anomaly detection pipelines on trading datasets, contributing to an award-winning solution in an internal innovation challenge.",
       "Led a 12-member team in a hackathon to develop an AI-powered tool that generates GitLab tickets, test cases, and requirement summaries, improving development workflow efficiency."
     ],
-    skills: ["NextJs", "React", "NodeJs", "ExpressJs", "MongoDB", "TailwindCSS", "HTML5", "CSS3", "Javascript"],
+    skills: ["Next.Js", "React", "NodeJs", "ExpressJs", "MongoDB", "TailwindCSS", "HTML5", "CSS3", "Javascript"],
     companyUrl: "https://techsuryaitsolution.com/",
     logo: "/experience/techsurya.png",
   },
