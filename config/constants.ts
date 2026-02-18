@@ -8,6 +8,8 @@ export type ValidSkills =
   | "MongoDB"
   | "Typescript"
   | "Javascript"
+  | "API Integration"
+  | "JWT Auth"
   | "HTML 5"
   | "CSS 3"
   | "React Native"
@@ -17,7 +19,6 @@ export type ValidSkills =
   | "Material UI"
   | "Tailwind CSS"
   | "AWS"
-  | "JWT Auth"
   | "Bootstrap"
   | "Google Auth"
   | "MySQL"
@@ -61,7 +62,6 @@ export type ValidSkills =
   | "FastAPI"
   | "SQL"
   | "NoSQL"
-  | "API Integration"
   | "Framer Motion";
 
 export type ValidCategory =

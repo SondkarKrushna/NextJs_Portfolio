@@ -35,7 +35,7 @@ export const Projects: ProjectInterface[] = [
     category: ["Web Dev", "Frontend", "Backend"],
     shortDescription:
       "Open-source Next.js portfolio template recognized and forked by developers worldwide, optimized for SEO/AEO and performance.",
-    websiteLink: "https://nbarkiya.xyz",
+    websiteLink: "https://next-js-portfolio-three-mauve.vercel.app/",
     githubLink: "https://github.com/namanbarkiya/minimal-next-portfolio",
     techStack: [
       "Next.js",
@@ -47,7 +47,7 @@ export const Projects: ProjectInterface[] = [
     ],
     startDate: new Date("2024-01-01"),
     endDate: new Date("2025-12-01"),
-    companyLogoImg: "/projects/portfolio/logo.png",
+    companyLogoImg: "/projects/portfolio/portfolio.png",
     pagesInfoArr: [
       {
         title: "Landing & Sections",
