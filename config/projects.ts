@@ -36,7 +36,7 @@ export const Projects: ProjectInterface[] = [
     shortDescription:
       "Open-source Next.js portfolio template recognized and forked by developers worldwide, optimized for SEO/AEO and performance.",
     websiteLink: "https://next-js-portfolio-three-mauve.vercel.app/",
-    githubLink: "https://github.com/namanbarkiya/minimal-next-portfolio",
+    githubLink: "https://github.com/sondkarkrushna/NextJs_Portfolio",
     techStack: [
       "Next.js",
       "React",
@@ -45,7 +45,7 @@ export const Projects: ProjectInterface[] = [
       "Framer Motion",
       "Vercel",
     ],
-    startDate: new Date("2024-01-01"),
+    startDate: new Date("2025-10-17"),
     endDate: new Date("2025-12-01"),
     companyLogoImg: "/projects/portfolio/portfolio.png",
     pagesInfoArr: [

@@ -36,3 +36,23 @@ export async function POST(req: Request) {
     );
   }
 }
+
+export async function GET() {
+  try {
+    await connectDB();
+
+    // Fetch only name and email fields
+    const contacts = await Contact.find({}, "name email");
+
+    return NextResponse.json({
+      success: true,
+      data: contacts,
+    });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
+}
