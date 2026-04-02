@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import Contact from "@/models/Contact";
+import { sendThankYouEmail } from "@/lib/mail";
 
 export async function POST(req: Request) {
   try {
@@ -22,6 +23,11 @@ export async function POST(req: Request) {
       message,
       social,
     });
+
+    // Send thank-you email (fire-and-forget, does not block the response)
+    sendThankYouEmail(name, email).catch((err) =>
+      console.error("Failed to send thank-you email:", err)
+    );
 
     return NextResponse.json({
       success: true,

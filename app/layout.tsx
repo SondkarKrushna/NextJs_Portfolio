@@ -110,6 +110,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
           fontSans.variable,
           fontHeading.variable
         )}
+        suppressHydrationWarning
       >
         <ThemeProvider
           attribute="class"

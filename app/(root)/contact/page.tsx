@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 
 import PageContainer from "@/components/common/page-container";
-import GithubRedirectCard from "@/components/contact/github-redirect-card";
+import Interactive3DModelWrapper from "@/components/contact/interactive-3d-model-wrapper";
 import { ContactForm } from "@/components/forms/contact-form";
 import { pagesConfig } from "@/config/pages";
 
@@ -16,12 +16,12 @@ export default function ContactPage() {
       title={pagesConfig.contact.title}
       description={pagesConfig.contact.description}
     >
-      <div className="flex flex-col lg:flex-row">
+      <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
         <div className="flex-1">
           <ContactForm />
         </div>
-        <div className="flex-1 flex justify-end">
-          <GithubRedirectCard />
+        <div className="flex-1 flex justify-center items-start lg:sticky lg:top-24">
+          <Interactive3DModelWrapper />
         </div>
       </div>
     </PageContainer>
