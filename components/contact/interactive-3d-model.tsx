@@ -1,8 +1,8 @@
 "use client";
 
-import { Canvas, useFrame } from "@react-three/fiber";
-import { Float, MeshDistortMaterial, OrbitControls } from "@react-three/drei";
-import { useRef, useMemo } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Float, OrbitControls } from "@react-three/drei";
+import { useRef, useMemo, useState, useCallback, useEffect } from "react";
 import { useTheme } from "next-themes";
 import * as THREE from "three";
 
@@ -10,85 +10,101 @@ import * as THREE from "three";
 const THEME_PALETTES: Record<
   string,
   {
-    primary: string;
-    secondary: string;
-    accent: string;
+    wireframe: string;
+    wireGlow: string;
+    ring1: string;
+    ring2: string;
+    ring3: string;
+    coreGlow: string;
+    dataPoints: string;
+    pulse: string;
+    meridian: string;
     particleColor: string;
-    bgGradient: string;
-    roughness: number;
-    metalness: number;
-    distort: number;
   }
 > = {
   light: {
-    primary: "#4f46e5",
-    secondary: "#818cf8",
-    accent: "#c7d2fe",
-    particleColor: "#6366f1",
-    bgGradient: "linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%)",
-    roughness: 0.3,
-    metalness: 0.6,
-    distort: 0.35,
+    wireframe: "#4338ca",
+    wireGlow: "#6366f1",
+    ring1: "#818cf8",
+    ring2: "#a5b4fc",
+    ring3: "#c7d2fe",
+    coreGlow: "#4f46e5",
+    dataPoints: "#6366f1",
+    pulse: "#818cf8",
+    meridian: "#4338ca",
+    particleColor: "#818cf8",
   },
   dark: {
-    primary: "#6366f1",
-    secondary: "#818cf8",
-    accent: "#4f46e5",
+    wireframe: "#6366f1",
+    wireGlow: "#818cf8",
+    ring1: "#4f46e5",
+    ring2: "#818cf8",
+    ring3: "#a5b4fc",
+    coreGlow: "#6366f1",
+    dataPoints: "#a5b4fc",
+    pulse: "#6366f1",
+    meridian: "#818cf8",
     particleColor: "#a5b4fc",
-    bgGradient: "linear-gradient(180deg, #020617 0%, #0f172a 100%)",
-    roughness: 0.2,
-    metalness: 0.85,
-    distort: 0.3,
   },
   retro: {
-    primary: "#d97706",
-    secondary: "#f59e0b",
-    accent: "#92400e",
+    wireframe: "#d97706",
+    wireGlow: "#f59e0b",
+    ring1: "#fbbf24",
+    ring2: "#f59e0b",
+    ring3: "#fde68a",
+    coreGlow: "#d97706",
+    dataPoints: "#fbbf24",
+    pulse: "#f59e0b",
+    meridian: "#d97706",
     particleColor: "#fbbf24",
-    bgGradient: "linear-gradient(180deg, #fef3c7 0%, #fde68a 100%)",
-    roughness: 0.5,
-    metalness: 0.4,
-    distort: 0.4,
   },
   cyberpunk: {
-    primary: "#ec4899",
-    secondary: "#06b6d4",
-    accent: "#facc15",
+    wireframe: "#ec4899",
+    wireGlow: "#f472b6",
+    ring1: "#06b6d4",
+    ring2: "#ec4899",
+    ring3: "#facc15",
+    coreGlow: "#ec4899",
+    dataPoints: "#22d3ee",
+    pulse: "#f472b6",
+    meridian: "#06b6d4",
     particleColor: "#f472b6",
-    bgGradient: "linear-gradient(180deg, #0c0a3e 0%, #1a0533 100%)",
-    roughness: 0.1,
-    metalness: 0.95,
-    distort: 0.25,
   },
   paper: {
-    primary: "#b45309",
-    secondary: "#d97706",
-    accent: "#78350f",
+    wireframe: "#b45309",
+    wireGlow: "#d97706",
+    ring1: "#ca8a04",
+    ring2: "#d97706",
+    ring3: "#fde68a",
+    coreGlow: "#b45309",
+    dataPoints: "#ca8a04",
+    pulse: "#d97706",
+    meridian: "#92400e",
     particleColor: "#ca8a04",
-    bgGradient: "linear-gradient(180deg, #fef9ef 0%, #fdf2e9 100%)",
-    roughness: 0.6,
-    metalness: 0.3,
-    distort: 0.45,
   },
   aurora: {
-    primary: "#10b981",
-    secondary: "#a855f7",
-    accent: "#ec4899",
+    wireframe: "#10b981",
+    wireGlow: "#34d399",
+    ring1: "#a855f7",
+    ring2: "#10b981",
+    ring3: "#ec4899",
+    coreGlow: "#10b981",
+    dataPoints: "#34d399",
+    pulse: "#a855f7",
+    meridian: "#10b981",
     particleColor: "#34d399",
-    bgGradient: "linear-gradient(180deg, #0f1729 0%, #1a1040 100%)",
-    roughness: 0.15,
-    metalness: 0.9,
-    distort: 0.3,
   },
   synthwave: {
-    primary: "#e040fb",
-    secondary: "#00e5ff",
-    accent: "#ffea00",
+    wireframe: "#e040fb",
+    wireGlow: "#f06292",
+    ring1: "#00e5ff",
+    ring2: "#e040fb",
+    ring3: "#ffea00",
+    coreGlow: "#e040fb",
+    dataPoints: "#00e5ff",
+    pulse: "#f06292",
+    meridian: "#00e5ff",
     particleColor: "#f06292",
-    bgGradient: "linear-gradient(180deg, #1a1033 0%, #2d1b69 100%)",
-    roughness: 0.1,
-    metalness: 0.95,
-    distort: 0.28,
   },
 };
 
@@ -96,44 +112,174 @@ function getPalette(theme: string | undefined) {
   return THEME_PALETTES[theme ?? "dark"] ?? THEME_PALETTES.dark;
 }
 
-/* ─── Central Torus Knot ─── */
-function CoreShape({ palette }: { palette: (typeof THEME_PALETTES)[string] }) {
-  const meshRef = useRef<THREE.Mesh>(null);
+/* ─── Cursor-following light ─── */
+function CursorLight({ palette }: { palette: (typeof THEME_PALETTES)[string] }) {
+  const lightRef = useRef<THREE.PointLight>(null);
+  const { pointer, viewport } = useThree();
 
-  useFrame((_, delta) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.x += delta * 0.12;
-      meshRef.current.rotation.y += delta * 0.18;
+  useFrame(() => {
+    if (lightRef.current) {
+      const x = (pointer.x * viewport.width) / 2;
+      const y = (pointer.y * viewport.height) / 2;
+      lightRef.current.position.x += (x - lightRef.current.position.x) * 0.06;
+      lightRef.current.position.y += (y - lightRef.current.position.y) * 0.06;
     }
   });
 
   return (
-    <Float speed={1.4} rotationIntensity={0.5} floatIntensity={1}>
-      <mesh ref={meshRef} scale={1.15}>
-        <torusKnotGeometry args={[0.8, 0.3, 128, 32]} />
-        <MeshDistortMaterial
-          color={palette.primary}
-          roughness={palette.roughness}
-          metalness={palette.metalness}
-          distort={palette.distort}
-          speed={2.5}
-        />
-      </mesh>
+    <pointLight
+      ref={lightRef}
+      position={[0, 0, 3]}
+      intensity={0.6}
+      color={palette.wireGlow}
+      distance={8}
+      decay={2}
+    />
+  );
+}
+
+/* ─── Wireframe Globe ─── */
+function WireframeGlobe({
+  palette,
+  hovered,
+}: {
+  palette: (typeof THEME_PALETTES)[string];
+  hovered: boolean;
+}) {
+  const globeRef = useRef<THREE.Group>(null);
+  const innerRef = useRef<THREE.Mesh>(null);
+
+  useFrame((_, delta) => {
+    if (globeRef.current) {
+      globeRef.current.rotation.y += delta * (hovered ? 0.25 : 0.12);
+      globeRef.current.rotation.x += delta * 0.02;
+    }
+  });
+
+  return (
+    <Float speed={0.8} rotationIntensity={0.15} floatIntensity={0.4}>
+      <group ref={globeRef}>
+        {/* Wireframe sphere */}
+        <mesh>
+          <sphereGeometry args={[1.0, 28, 20]} />
+          <meshStandardMaterial
+            color={palette.wireframe}
+            wireframe
+            emissive={palette.wireframe}
+            emissiveIntensity={hovered ? 0.7 : 0.4}
+            transparent
+            opacity={hovered ? 0.9 : 0.7}
+          />
+        </mesh>
+
+        {/* Inner solid core — faint glow */}
+        <mesh ref={innerRef} scale={0.35}>
+          <sphereGeometry args={[1.0, 24, 24]} />
+          <meshStandardMaterial
+            color={palette.coreGlow}
+            emissive={palette.coreGlow}
+            emissiveIntensity={hovered ? 0.9 : 0.5}
+            transparent
+            opacity={0.25}
+            roughness={0.1}
+            metalness={0.8}
+          />
+        </mesh>
+
+        {/* Second wireframe layer — slightly larger, rotated */}
+        <mesh rotation={[0.3, 0.8, 0.1]} scale={1.02}>
+          <sphereGeometry args={[1.0, 14, 10]} />
+          <meshStandardMaterial
+            color={palette.wireGlow}
+            wireframe
+            emissive={palette.wireGlow}
+            emissiveIntensity={0.2}
+            transparent
+            opacity={0.2}
+          />
+        </mesh>
+
+        {/* Latitude rings (horizontal bands) */}
+        {[-0.6, -0.3, 0, 0.3, 0.6].map((y, i) => {
+          const r = Math.sqrt(1 - y * y); // radius at this y
+          return (
+            <mesh key={`lat-${i}`} position={[0, y, 0]} rotation={[Math.PI / 2, 0, 0]}>
+              <torusGeometry args={[r, 0.004, 8, 80]} />
+              <meshStandardMaterial
+                color={palette.meridian}
+                emissive={palette.meridian}
+                emissiveIntensity={0.5}
+                transparent
+                opacity={0.4}
+              />
+            </mesh>
+          );
+        })}
+
+        {/* Meridian lines (vertical bands) */}
+        {[0, Math.PI / 3, (2 * Math.PI) / 3].map((angle, i) => (
+          <mesh key={`mer-${i}`} rotation={[0, angle, 0]}>
+            <torusGeometry args={[1.0, 0.004, 8, 80]} />
+            <meshStandardMaterial
+              color={palette.meridian}
+              emissive={palette.meridian}
+              emissiveIntensity={0.5}
+              transparent
+              opacity={0.35}
+            />
+          </mesh>
+        ))}
+      </group>
     </Float>
   );
 }
 
-/* ─── Orbiting Ring ─── */
-function OrbitRing({
+/* ─── Pulsing ring that expands outward ─── */
+function PulseRing({ palette }: { palette: (typeof THEME_PALETTES)[string] }) {
+  const ringRef = useRef<THREE.Mesh>(null);
+  const scaleRef = useRef(1);
+
+  useFrame(({ clock }) => {
+    if (ringRef.current) {
+      // Cycle: expand from 1 to 2, then reset
+      scaleRef.current = 1 + (clock.elapsedTime * 0.3) % 1.0;
+      ringRef.current.scale.setScalar(scaleRef.current);
+
+      // Fade out as it expands
+      const mat = ringRef.current.material as THREE.MeshStandardMaterial;
+      mat.opacity = 0.4 * (1 - (scaleRef.current - 1));
+    }
+  });
+
+  return (
+    <mesh ref={ringRef} rotation={[Math.PI / 2, 0, 0]}>
+      <torusGeometry args={[1.0, 0.008, 8, 100]} />
+      <meshStandardMaterial
+        color={palette.pulse}
+        emissive={palette.pulse}
+        emissiveIntensity={0.8}
+        transparent
+        opacity={0.4}
+      />
+    </mesh>
+  );
+}
+
+/* ─── Orbital Rings ─── */
+function OrbitalRing({
   color,
   radius,
   tilt,
   speed,
+  thickness,
+  opacityVal,
 }: {
   color: string;
   radius: number;
   tilt: number;
   speed: number;
+  thickness: number;
+  opacityVal: number;
 }) {
   const ref = useRef<THREE.Mesh>(null);
 
@@ -146,30 +292,84 @@ function OrbitRing({
 
   return (
     <mesh ref={ref}>
-      <torusGeometry args={[radius, 0.015, 16, 100]} />
+      <torusGeometry args={[radius, thickness, 16, 140]} />
       <meshStandardMaterial
         color={color}
+        emissive={color}
+        emissiveIntensity={0.6}
         transparent
-        opacity={0.55}
-        roughness={0.3}
-        metalness={0.7}
+        opacity={opacityVal}
+        roughness={0.2}
+        metalness={0.8}
       />
     </mesh>
   );
 }
 
-/* ─── Floating Particles ─── */
+/* ─── Data points on globe surface ─── */
+function DataPoints({
+  palette,
+  hovered,
+}: {
+  palette: (typeof THEME_PALETTES)[string];
+  hovered: boolean;
+}) {
+  const groupRef = useRef<THREE.Group>(null);
+  const count = 40;
+
+  const points = useMemo(() => {
+    const arr: { pos: [number, number, number]; size: number }[] = [];
+    for (let i = 0; i < count; i++) {
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      const r = 1.02;
+      arr.push({
+        pos: [
+          r * Math.sin(phi) * Math.cos(theta),
+          r * Math.sin(phi) * Math.sin(theta),
+          r * Math.cos(phi),
+        ],
+        size: 0.01 + Math.random() * 0.02,
+      });
+    }
+    return arr;
+  }, []);
+
+  useFrame((_, delta) => {
+    if (groupRef.current) {
+      groupRef.current.rotation.y += delta * 0.12;
+    }
+  });
+
+  return (
+    <group ref={groupRef}>
+      {points.map((p, i) => (
+        <mesh key={i} position={p.pos as [number, number, number]}>
+          <sphereGeometry args={[p.size, 6, 6]} />
+          <meshStandardMaterial
+            color={palette.dataPoints}
+            emissive={palette.dataPoints}
+            emissiveIntensity={hovered ? 1.5 : 0.8}
+            transparent
+            opacity={0.8}
+          />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+/* ─── Floating particles ─── */
 function Particles({ color }: { color: string }) {
   const ref = useRef<THREE.Points>(null);
-  const count = 120;
+  const count = 100;
 
   const positions = useMemo(() => {
     const arr = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
-      // Distribute in a spherical shell
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
-      const r = 2.0 + Math.random() * 1.5;
+      const r = 2.5 + Math.random() * 2;
       arr[i * 3] = r * Math.sin(phi) * Math.cos(theta);
       arr[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
       arr[i * 3 + 2] = r * Math.cos(phi);
@@ -179,8 +379,8 @@ function Particles({ color }: { color: string }) {
 
   useFrame(({ clock }) => {
     if (ref.current) {
-      ref.current.rotation.y = clock.elapsedTime * 0.05;
-      ref.current.rotation.x = Math.sin(clock.elapsedTime * 0.2) * 0.08;
+      ref.current.rotation.y = clock.elapsedTime * 0.02;
+      ref.current.rotation.x = Math.sin(clock.elapsedTime * 0.08) * 0.03;
     }
   });
 
@@ -190,10 +390,10 @@ function Particles({ color }: { color: string }) {
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
       <pointsMaterial
-        size={0.04}
+        size={0.02}
         color={color}
         transparent
-        opacity={0.7}
+        opacity={0.5}
         sizeAttenuation
       />
     </points>
@@ -201,22 +401,31 @@ function Particles({ color }: { color: string }) {
 }
 
 /* ─── Scene ─── */
-function Scene({ theme }: { theme: string | undefined }) {
+function Scene({
+  theme,
+  hovered,
+}: {
+  theme: string | undefined;
+  hovered: boolean;
+}) {
   const palette = getPalette(theme);
 
   return (
     <>
-      <ambientLight intensity={0.35} />
-      <directionalLight position={[5, 5, 5]} intensity={0.7} />
-      <pointLight position={[-4, 3, -3]} intensity={0.5} color={palette.secondary} />
-      <pointLight position={[4, -3, 3]} intensity={0.35} color={palette.accent} />
+      <ambientLight intensity={0.15} />
+      <directionalLight position={[5, 5, 5]} intensity={0.4} />
+      <pointLight position={[0, 0, 0]} intensity={0.5} color={palette.coreGlow} distance={5} />
 
-      <CoreShape palette={palette} />
+      <CursorLight palette={palette} />
 
-      {/* Three orbiting rings at different tilts */}
-      <OrbitRing color={palette.secondary} radius={1.9} tilt={0.3} speed={0.25} />
-      <OrbitRing color={palette.accent} radius={2.2} tilt={-0.6} speed={-0.18} />
-      <OrbitRing color={palette.primary} radius={2.5} tilt={1.1} speed={0.12} />
+      <WireframeGlobe palette={palette} hovered={hovered} />
+      <PulseRing palette={palette} />
+      <DataPoints palette={palette} hovered={hovered} />
+
+      {/* Orbital rings at various tilts */}
+      <OrbitalRing color={palette.ring1} radius={1.5} tilt={1.2} speed={0.15} thickness={0.01} opacityVal={0.45} />
+      <OrbitalRing color={palette.ring2} radius={1.75} tilt={0.5} speed={-0.1} thickness={0.008} opacityVal={0.3} />
+      <OrbitalRing color={palette.ring3} radius={2.0} tilt={-0.8} speed={0.08} thickness={0.006} opacityVal={0.2} />
 
       <Particles color={palette.particleColor} />
 
@@ -224,27 +433,40 @@ function Scene({ theme }: { theme: string | undefined }) {
         enableZoom={false}
         enablePan={false}
         autoRotate
-        autoRotateSpeed={0.5}
+        autoRotateSpeed={0.3}
       />
     </>
   );
 }
 
+/* ─── Main Export ─── */
 export default function Interactive3DModel() {
   const { resolvedTheme } = useTheme();
+  const [hovered, setHovered] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  const palette = getPalette(resolvedTheme);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="w-full h-[350px] lg:h-[420px] mt-5 rounded-xl overflow-hidden" />
+    );
+  }
 
   return (
     <div
-      className="w-full h-[350px] lg:h-[420px] mt-5 rounded-xl overflow-hidden border border-border/50"
+      className="w-full h-[350px] lg:h-[420px] mt-5 rounded-xl overflow-hidden cursor-grab active:cursor-grabbing"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       <Canvas
-        camera={{ position: [0, 0, 5], fov: 45 }}
-        gl={{ antialias: true }}
-        style={{ background: palette.bgGradient }}
+        camera={{ position: [0, 0.3, 3.5], fov: 50 }}
+        gl={{ antialias: true, alpha: true }}
+        style={{ background: "transparent" }}
       >
-        <Scene theme={resolvedTheme} />
+        <Scene theme={resolvedTheme} hovered={hovered} />
       </Canvas>
     </div>
   );
